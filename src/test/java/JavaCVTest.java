@@ -1,5 +1,4 @@
 import com.spartango.air.imagery.BingImageSource;
-import org.bytedeco.javacpp.opencv_imgproc;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -9,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.util.Optional;
 
 import static org.bytedeco.javacpp.opencv_core.IplImage;
+import static org.bytedeco.javacpp.opencv_imgproc.*;
 
 /**
  * Author: spartango
@@ -33,28 +33,27 @@ public class JavaCVTest {
     }
 
     @Test
-    public void testBlur() throws Exception {
+    public void testFilter() throws Exception {
         BingImageSource source = new BingImageSource();
+        final Optional<BufferedImage> imageResult = source.getImageAround(32.164985, -110.861441, 18, 500, 500);
+        org.junit.Assert.assertTrue(imageResult.isPresent());
 
-        for (double i = 32.154985; i < 32.154985 + .02; i += .001) {
-            for (double j = -110.861441; j < -110.861441 + .02; j += .001) {
-                final Optional<BufferedImage> imageResult = source.getImageAround(i, j, 16, 500, 500);
-                org.junit.Assert.assertTrue(imageResult.isPresent());
+        imageResult.ifPresent(image -> {
+            IplImage target = IplImage.createFrom(image);
+            IplImage gray = IplImage.create(target.cvSize(), target.depth(), 1);
+            cvCvtColor(target, gray, COLOR_BGR2GRAY);
 
-                imageResult.ifPresent(image -> {
-                    imageView.setIcon(new ImageIcon(image));
-                    IplImage target = IplImage.createFrom(image);
-                    IplImage result = IplImage.createCompatible(target);
-                    opencv_imgproc.cvSmooth(target, result);
-                    BufferedImage processed = result.getBufferedImage();
-                    imageView.setIcon(new ImageIcon(processed));
-                });
+            IplImage result = IplImage.create(target.cvSize(), target.depth(), 1);
+            cvSobel(gray, result, 1, 1, 5);
 
-                Thread.sleep(16);
-            }
-        }
+            BufferedImage processed = result.getBufferedImage();
+            imageView.setIcon(new ImageIcon(processed));
+        });
+
+        Thread.sleep(10000);
 
     }
+
 
     @After
     public void tearDown() throws Exception {
