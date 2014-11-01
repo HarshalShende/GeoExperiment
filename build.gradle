@@ -18,6 +18,7 @@ repositories {
 // External dependencies
 dependencies {
     compile group: 'com.google.guava', name: 'guava', version: '18.0'
+    compile group: 'de.micromata.jak', name: 'JavaAPIforKml', version: '2.2.1'
     compile fileTree(dir: 'lib/javacv-bin', include: '*.jar')
 
     testCompile group: 'junit', name: 'junit', version: '4.+'
