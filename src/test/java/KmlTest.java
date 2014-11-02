@@ -1,13 +1,15 @@
 import com.spartango.air.imagery.BingImageSource;
-import com.spartango.air.target.TargetLoader;
+import com.spartango.air.target.KmlTargetSource;
 import de.micromata.opengis.kml.v_2_2_0.Placemark;
 import de.micromata.opengis.kml.v_2_2_0.Point;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Author: spartango
@@ -39,23 +41,49 @@ public class KmlTest {
 
     @Test
     public void loadKml() throws Exception {
-        TargetLoader loader = new TargetLoader("doc.kml");
-        final List<Placemark> allTargets = loader.getAllTargets();
+        KmlTargetSource loader = new KmlTargetSource("doc.kml");
+        final List<Placemark> allTargets = loader.getTargets();
         System.out.println("Loaded " + allTargets.size() + " targets");
     }
 
     @Test
-    public void displayTargets() throws Exception {
-        TargetLoader loader = new TargetLoader("doc.kml");
-        final List<Placemark> allTargets = loader.getAllTargets();
-        System.out.println("Loaded " + allTargets.size() + " targets");
+    public void findCategories() throws Exception {
+        KmlTargetSource loader = new KmlTargetSource("doc.kml");
+        final Optional<KmlTargetSource> subSource = loader.getSubSourceByName("SAM Site Overview")
+                                                          .flatMap(s -> s.getSubSourceByName("SAMs by country"))
+                                                          .flatMap(s -> s.getSubSourceByName("Asia"))
+                                                          .flatMap(s -> s.getSubSourceByName("China"))
+                                                          .flatMap(s -> s.getSubSourceByName("Beijing MR"))
+                                                          .flatMap(s -> s.getSubSourceByName("Active"));
 
+        Assert.assertTrue(subSource.isPresent());
+
+        List<Placemark> allTargets = subSource.get().getTargets();
+        System.out.println("Filtered to " + allTargets.size() + " targets");
+        System.out.println("Subcategories include: " + subSource.get().getSubSourceNames());
+    }
+
+    @Test
+    public void displayTargets() throws Exception {
+        KmlTargetSource loader = new KmlTargetSource("doc.kml");
+        final Optional<KmlTargetSource> subSource = loader.getSubSourceByName("SAM Site Overview")
+                                                          .flatMap(s -> s.getSubSourceByName("SAMs by country"))
+                                                          .flatMap(s -> s.getSubSourceByName("Asia"))
+                                                          .flatMap(s -> s.getSubSourceByName("China"))
+                                                          .flatMap(s -> s.getSubSourceByName("Beijing MR"))
+                                                          .flatMap(s -> s.getSubSourceByName("Active"));
+
+        Assert.assertTrue(subSource.isPresent());
+
+        List<Placemark> allTargets = subSource.get().getTargets();
+        System.out.println("Displaying " + allTargets.size() + " targets");
 
         allTargets.stream()
+                  .filter(target -> target.getGeometry() instanceof Point)
                   .flatMap(target -> ((Point) target.getGeometry()).getCoordinates().stream())
                   .map(location -> source.getImageAround(location.getLatitude(),
                                                          location.getLongitude(),
-                                                         18,
+                                                         16,
                                                          500,
                                                          500))
                   .forEach(result -> result.ifPresent(this::setImage));
