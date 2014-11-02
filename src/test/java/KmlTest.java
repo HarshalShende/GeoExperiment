@@ -23,7 +23,6 @@ public class KmlTest {
 
     private BingImageSource source;
 
-
     @Before
     public void setUp() throws Exception {
         frame = new JFrame();
@@ -60,7 +59,7 @@ public class KmlTest {
 
         List<Placemark> allTargets = subSource.get().getTargets();
         System.out.println("Filtered to " + allTargets.size() + " targets");
-        System.out.println("Subcategories include: " + subSource.get().getSubSourceNames());
+        System.out.println("Subcategories include: " + subSource.get().getSubSources().keySet());
     }
 
     @Test
@@ -68,9 +67,9 @@ public class KmlTest {
         KmlTargetSource loader = new KmlTargetSource("doc.kml");
         final Optional<KmlTargetSource> subSource = loader.getSubSourceByName("SAM Site Overview")
                                                           .flatMap(s -> s.getSubSourceByName("SAMs by country"))
-                                                          .flatMap(s -> s.getSubSourceByName("Asia"))
-                                                          .flatMap(s -> s.getSubSourceByName("China"))
-                                                          .flatMap(s -> s.getSubSourceByName("Beijing MR"))
+                                                          .flatMap(s -> s.getSubSourceByName("Europe"))
+                                                          .flatMap(s -> s.getSubSourceByName("Russia"))
+                                                          .flatMap(s -> s.getSubSourceByName("Western Command"))
                                                           .flatMap(s -> s.getSubSourceByName("Active"));
 
         Assert.assertTrue(subSource.isPresent());
@@ -83,7 +82,7 @@ public class KmlTest {
                   .flatMap(target -> ((Point) target.getGeometry()).getCoordinates().stream())
                   .map(location -> source.getImageAround(location.getLatitude(),
                                                          location.getLongitude(),
-                                                         16,
+                                                         15,
                                                          500,
                                                          500))
                   .forEach(result -> result.ifPresent(this::setImage));

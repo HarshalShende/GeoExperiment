@@ -3,10 +3,7 @@ package com.spartango.air.target;
 import de.micromata.opengis.kml.v_2_2_0.*;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -35,6 +32,16 @@ public class KmlTargetSource {
         return extractPlaces(document);
     }
 
+    public Map<String, KmlTargetSource> getSubSources() {
+        if (document instanceof Document) {
+            return getSubSources((Document) document);
+        } else if (document instanceof Folder) {
+            return getSubSources((Folder) document);
+        } else {
+            return Collections.EMPTY_MAP;
+        }
+    }
+
     public Optional<KmlTargetSource> getSubSourceByName(String name) {
         if (document instanceof Document) {
             return getSubSourceByName((Document) document, name);
@@ -45,30 +52,18 @@ public class KmlTargetSource {
         }
     }
 
-    public List<String> getSubSourceNames() {
-        if (document instanceof Document) {
-            return getSubSourceNames((Document) document);
-        } else if (document instanceof Folder) {
-            return getSubSourceNames((Folder) document);
-        } else {
-            return Collections.EMPTY_LIST;
-        }
-    }
-
-    private static List<String> getSubSourceNames(Document document) {
+    private static Map<String, KmlTargetSource> getSubSources(Document document) {
         return document.getFeature()
                        .stream()
                        .filter(feature -> feature instanceof Folder)
-                       .map(Feature::getName)
-                       .collect(Collectors.toList());
+                       .collect(Collectors.toMap(Feature::getName, feature -> new KmlTargetSource((Folder) feature)));
     }
 
-    private static List<String> getSubSourceNames(Folder document) {
+    private static Map<String, KmlTargetSource> getSubSources(Folder document) {
         return document.getFeature()
                        .stream()
                        .filter(feature -> feature instanceof Folder)
-                       .map(Feature::getName)
-                       .collect(Collectors.toList());
+                       .collect(Collectors.toMap(Feature::getName, feature -> new KmlTargetSource((Folder) feature)));
     }
 
     private static Optional<KmlTargetSource> getSubSourceByName(Folder target, String name) {
